@@ -11,6 +11,7 @@ import (
 	"github.com/rivo/tview"
 	"net/http"
 	//"reflect"
+	//"os"
 	"strconv"
 	"time"
 )
@@ -454,7 +455,7 @@ func (g GameContext) RenderCard() GameCardRenderData {
 // TODO render focused view data with box score, detailed stats etc
 
 func main() {
-	currentDate := "10/26/2023" //time.Now().Format("01/02/2006")
+	currentDate := time.Now().Format("01/02/2006")
 	fmt.Printf("Current date: %s\n", currentDate)
 	var nbaContext NBAContext
 	nbaContext.dayChannel = make(chan DayQuery)
@@ -533,6 +534,7 @@ func main() {
 
 	// TODO only do this for visible elements
 	go (func() {
+		// this could read state, maybe
 		for true {
 			time.Sleep(5 * time.Second)
 			updateElements()
@@ -547,30 +549,29 @@ func main() {
 	renderDetailedView := func(gameContext *GameContext) *tview.Flex {
 		renderPlayerBoxScore := func(teamData *BoxScoreTeam) *tview.Table {
 			table := tview.NewTable().SetBorders(true)
-			if gameContext.boxScore != nil {
-				table.SetCell(0, 0, tview.NewTableCell(teamData.TeamTricode))
-				for i, colName := range []string{"MIN", "PTS", "TREB", "AST", "FG", "3PT", "OREB", "DREB", "STL", "BLK", "TO", "PF", "+/-"} {
-					table.SetCell(0, i+1, tview.NewTableCell(colName).SetAlign(tview.AlignRight))
+			table.SetCell(0, 0, tview.NewTableCell(fmt.Sprintf("%s                     ", teamData.TeamTricode)))
+			for i, colName := range []string{"MIN", "PTS", "TREB", "AST", "   FG", "  3PT", "   FT", "OREB", "DREB", "STL", "BLK", "TO", "PF", "+/-"} {
+				table.SetCell(0, i+1, tview.NewTableCell(colName).SetAlign(tview.AlignRight))
+			}
+			for r, player := range teamData.Players {
+				table.SetCell(r+1, 0, tview.NewTableCell(fmt.Sprintf("%s. %s #%s %s", player.FirstName[0:1], player.FamilyName, player.JerseyNum, player.Position)))
+				minutes, err := strconv.Atoi(player.Statistics.MinutesCalculated[2:4])
+				if err == nil {
+					table.SetCell(r+1, 1, tview.NewTableCell(fmt.Sprintf("%d", minutes)))
 				}
-				for r, player := range teamData.Players {
-					table.SetCell(r+1, 0, tview.NewTableCell(fmt.Sprintf("%s. %s", player.FirstName[0:1], player.FamilyName)))
-					minutes, err := strconv.Atoi(player.Statistics.MinutesCalculated[2:4])
-					if err == nil {
-						table.SetCell(r+1, 1, tview.NewTableCell(fmt.Sprintf("%d", minutes)))
-					}
-					table.SetCell(r+1, 2, tview.NewTableCell(fmt.Sprintf("%d", player.Statistics.Points)).SetAlign(tview.AlignRight))
-					table.SetCell(r+1, 3, tview.NewTableCell(fmt.Sprintf("%d", player.Statistics.ReboundsTotal)).SetAlign(tview.AlignRight))
-					table.SetCell(r+1, 4, tview.NewTableCell(fmt.Sprintf("%d", player.Statistics.Assists)).SetAlign(tview.AlignRight))
-					table.SetCell(r+1, 5, tview.NewTableCell(fmt.Sprintf("%d-%d", player.Statistics.FieldGoalsMade, player.Statistics.FieldGoalsAttempted)).SetAlign(tview.AlignRight))
-					table.SetCell(r+1, 6, tview.NewTableCell(fmt.Sprintf("%d-%d", player.Statistics.ThreePointersMade, player.Statistics.ThreePointersAttempted)).SetAlign(tview.AlignRight))
-					table.SetCell(r+1, 7, tview.NewTableCell(fmt.Sprintf("%d", player.Statistics.ReboundsOffensive)).SetAlign(tview.AlignRight))
-					table.SetCell(r+1, 8, tview.NewTableCell(fmt.Sprintf("%d", player.Statistics.ReboundsDefensive)).SetAlign(tview.AlignRight))
-					table.SetCell(r+1, 9, tview.NewTableCell(fmt.Sprintf("%d", player.Statistics.Steals)).SetAlign(tview.AlignRight))
-					table.SetCell(r+1, 10, tview.NewTableCell(fmt.Sprintf("%d", player.Statistics.Blocks)).SetAlign(tview.AlignRight))
-					table.SetCell(r+1, 11, tview.NewTableCell(fmt.Sprintf("%d", player.Statistics.Turnovers)).SetAlign(tview.AlignRight))
-					table.SetCell(r+1, 12, tview.NewTableCell(fmt.Sprintf("%d", player.Statistics.FoulsPersonal)).SetAlign(tview.AlignRight))
-					table.SetCell(r+1, 13, tview.NewTableCell(fmt.Sprintf("%0.f", player.Statistics.PlusMinusPoints)).SetAlign(tview.AlignRight))
-				}
+				table.SetCell(r+1, 2, tview.NewTableCell(fmt.Sprintf("%d", player.Statistics.Points)).SetAlign(tview.AlignRight))
+				table.SetCell(r+1, 3, tview.NewTableCell(fmt.Sprintf("%d", player.Statistics.ReboundsTotal)).SetAlign(tview.AlignRight))
+				table.SetCell(r+1, 4, tview.NewTableCell(fmt.Sprintf("%d", player.Statistics.Assists)).SetAlign(tview.AlignRight))
+				table.SetCell(r+1, 5, tview.NewTableCell(fmt.Sprintf("%d-%d", player.Statistics.FieldGoalsMade, player.Statistics.FieldGoalsAttempted)).SetAlign(tview.AlignRight))
+				table.SetCell(r+1, 6, tview.NewTableCell(fmt.Sprintf("%d-%d", player.Statistics.ThreePointersMade, player.Statistics.ThreePointersAttempted)).SetAlign(tview.AlignRight))
+				table.SetCell(r+1, 7, tview.NewTableCell(fmt.Sprintf("%d-%d", player.Statistics.FreeThrowsMade, player.Statistics.FreeThrowsAttempted)).SetAlign(tview.AlignRight))
+				table.SetCell(r+1, 8, tview.NewTableCell(fmt.Sprintf("%d", player.Statistics.ReboundsOffensive)).SetAlign(tview.AlignRight))
+				table.SetCell(r+1, 9, tview.NewTableCell(fmt.Sprintf("%d", player.Statistics.ReboundsDefensive)).SetAlign(tview.AlignRight))
+				table.SetCell(r+1, 10, tview.NewTableCell(fmt.Sprintf("%d", player.Statistics.Steals)).SetAlign(tview.AlignRight))
+				table.SetCell(r+1, 11, tview.NewTableCell(fmt.Sprintf("%d", player.Statistics.Blocks)).SetAlign(tview.AlignRight))
+				table.SetCell(r+1, 12, tview.NewTableCell(fmt.Sprintf("%d", player.Statistics.Turnovers)).SetAlign(tview.AlignRight))
+				table.SetCell(r+1, 13, tview.NewTableCell(fmt.Sprintf("%d", player.Statistics.FoulsPersonal)).SetAlign(tview.AlignRight))
+				table.SetCell(r+1, 14, tview.NewTableCell(fmt.Sprintf("%0.f", player.Statistics.PlusMinusPoints)).SetAlign(tview.AlignRight))
 			}
 			return table
 		}
@@ -586,54 +587,133 @@ func main() {
 				table.SetCell(row, 7, tview.NewTableCell(fmt.Sprintf("%d", teamData.Statistics.Assists)).SetAlign(tview.AlignRight))
 				table.SetCell(row, 8, tview.NewTableCell(fmt.Sprintf("%d", teamData.Statistics.Turnovers)).SetAlign(tview.AlignRight))
 			}
-			if gameContext.boxScore != nil {
-				table.SetCell(1, 0, tview.NewTableCell(gameContext.awayTricode))
-				table.SetCell(2, 0, tview.NewTableCell(gameContext.homeTricode))
-				for i, colName := range []string{"PTS", "FG", "3PT", "ORB", "DRB", "TRB", "AST", "TO"} {
-					table.SetCell(0, i+1, tview.NewTableCell(colName).SetAlign(tview.AlignRight))
-				}
-				renderTeamRow(1, &gameContext.boxScore.Game.AwayTeam)
-				renderTeamRow(2, &gameContext.boxScore.Game.HomeTeam)
+			table.SetCell(0, 0, tview.NewTableCell(""))
+			table.SetCell(1, 0, tview.NewTableCell(gameContext.awayTricode))
+			table.SetCell(2, 0, tview.NewTableCell(gameContext.homeTricode))
+			for i, colName := range []string{"PTS", "FG", "3PT", "ORB", "DRB", "TRB", "AST", "TO"} {
+				table.SetCell(0, i+1, tview.NewTableCell(colName).SetAlign(tview.AlignRight))
 			}
+			renderTeamRow(1, &gameContext.boxScore.Game.AwayTeam)
+			renderTeamRow(2, &gameContext.boxScore.Game.HomeTeam)
 			return table
-
+		}
+		renderPlayByPlay := func() *tview.TextView { // TODO render incrementally, don't pull entire
+			p := tview.NewTextView()
+			s := ""
+			for _, action := range gameContext.plays.Game.Actions {
+				s += action.Description + "\n"
+			}
+			p.SetText(s)
+			p.ScrollToEnd()
+			return p
 		}
 		teamStatsTable := renderTeamBoxScores()
-		top := teamStatsTable
+		teamStatsFlex := tview.NewFlex().AddItem(tview.NewBox(), 0, 1, true).AddItem(teamStatsTable, 0, 1, true).AddItem(tview.NewBox(), 0, 1, true)
+		top := tview.NewFrame(teamStatsFlex).
+			AddText(fmt.Sprintf("%s %s at %s %s",
+				gameContext.boxScore.Game.AwayTeam.TeamCity,
+				gameContext.boxScore.Game.AwayTeam.TeamName,
+				gameContext.boxScore.Game.HomeTeam.TeamCity,
+				gameContext.boxScore.Game.HomeTeam.TeamName), true, tview.AlignCenter, tcell.ColorWhite).
+			AddText(fmt.Sprintf("%s, %s", gameContext.boxScore.Game.Arena.ArenaName, gameContext.boxScore.Game.Arena.ArenaCity), true, tview.AlignCenter, tcell.ColorWhite).
+			AddText(fmt.Sprintf("%s", gameContext.boxScore.Game.GameTimeUTC), true, tview.AlignCenter, tcell.ColorWhite).
+			AddText(gameContext.boxScore.Game.GameStatusText, true, tview.AlignCenter, tcell.ColorWhite)
 		awayPlayerTable := renderPlayerBoxScore(&gameContext.boxScore.Game.AwayTeam)
 		homePlayerTable := renderPlayerBoxScore(&gameContext.boxScore.Game.HomeTeam)
-		playerFlex := tview.NewFlex().AddItem(awayPlayerTable, 0, 1, true).AddItem(homePlayerTable, 0, 1, true)
-		view := tview.NewFlex().SetDirection(tview.FlexRow).AddItem(top, 0, 1, true).AddItem(playerFlex, 0, 4, true)
+		playByPlay := renderPlayByPlay()
+		/*
+			const (
+				home = iota
+				away = iota
+				pbp  = iota
+			)
+			whichView := home
+		*/
+		frame := tview.NewFrame(awayPlayerTable)
+		app.SetFocus(awayPlayerTable)
+		menuText := tview.NewTextView().SetText("[1] Away [2] Home [3] Play-By-Play")
+		menu := tview.NewFrame(menuText) // TODO highlight selected
+		view := tview.NewFlex().SetDirection(tview.FlexRow).
+			AddItem(top, 0, 4, true).
+			AddItem(menu, 0, 1, true).
+			AddItem(frame, 0, 10, true)
+		view.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
+			if event.Rune() == '1' {
+				frame.SetPrimitive(awayPlayerTable) // TODO: rerender then async fetch
+				app.SetFocus(awayPlayerTable)
+			} else if event.Rune() == '2' {
+				frame.SetPrimitive(homePlayerTable) // TODO: rerender then fetch
+				app.SetFocus(homePlayerTable)
+			} else if event.Rune() == '3' {
+				frame.SetPrimitive(playByPlay)
+				app.SetFocus(playByPlay)
+			}
+			//fmt.Println("hello ")
+			return event
+		})
 		return view
 	}
 
 	focusIndex := 0
-	currentView := 0
+	const (
+		homepage = iota
+		detailed = iota
+	)
+	currentView := homepage
+
+	rotateFocus := func(i int) {
+		mod := func(a, b int) int {
+			return (a%b + b) % b
+		}
+		focusIndex += i
+		focusIndex = mod(focusIndex, len(nbaContext.games))
+		app.SetFocus(nbaContext.games[focusIndex].textView)
+	}
 
 	app.SetRoot(homeView, true)
 	app.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
-		// TODO capture arrow keys/vim keys as well
 		if event.Name() == "Tab" {
-			if currentView == 0 {
-				focusIndex += 1
-				if focusIndex >= len(nbaContext.games) {
-					focusIndex = 0
-				}
-				app.SetFocus(nbaContext.games[focusIndex].textView)
+			if currentView == homepage {
+				rotateFocus(1)
 			}
 		} else if event.Name() == "Enter" {
-			if currentView == 0 {
-				app.SetRoot(renderDetailedView(nbaContext.games[focusIndex]), true)
-				currentView = 1
+			if currentView == homepage {
+				if nbaContext.games[focusIndex].boxScore != nil {
+					view := renderDetailedView(nbaContext.games[focusIndex])
+					app.SetRoot(view, true)
+					app.SetFocus(view)
+					currentView = detailed
+				}
 			}
-		} else if event.Name() == "Esc" {
-			if currentView == 1 {
+		} else if event.Name() == "Esc" || event.Rune() == 'q' {
+			if currentView == detailed {
 				app.SetRoot(homeView, true)
 				app.SetFocus(nbaContext.games[focusIndex].textView)
-				currentView = 0
+				currentView = homepage
+			} /*else if currentView == homepage {
+				// TODO: consider not using ESC to exit program
+				//return tcell.NewEventKey(tcell.KeyCtrlC, ' ', tcell.ModNone)
+				app.Stop()
+				return nil
+			}*/
+		}
+
+		if currentView == homepage {
+			if event.Name() == "Left" || event.Rune() == 'h' {
+				rotateFocus(-1)
+				return nil
+			} else if event.Name() == "Right" || event.Rune() == 'l' {
+				rotateFocus(1)
+				return nil
+			}
+			if event.Name() == "Up" || event.Rune() == 'k' {
+				rotateFocus(-5)
+				return nil
+			} else if event.Name() == "Down" || event.Rune() == 'j' {
+				rotateFocus(5)
+				return nil
 			}
 		}
-		//fmt.Println(event.Name())
 		return event
 	})
 
