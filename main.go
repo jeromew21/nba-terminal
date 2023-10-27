@@ -10,7 +10,8 @@ import (
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 	"net/http"
-	"reflect"
+	//"reflect"
+	"strconv"
 	"time"
 )
 
@@ -133,6 +134,134 @@ type PlayByPlayQuery struct {
 	} `json:"game"`
 }
 
+type BoxScoreTeam struct {
+	TeamID            int    `json:"teamId"`
+	TeamName          string `json:"teamName"`
+	TeamCity          string `json:"teamCity"`
+	TeamTricode       string `json:"teamTricode"`
+	Score             int    `json:"score"`
+	InBonus           string `json:"inBonus"`
+	TimeoutsRemaining int    `json:"timeoutsRemaining"`
+	Periods           []struct {
+		Period     int    `json:"period"`
+		PeriodType string `json:"periodType"`
+		Score      int    `json:"score"`
+	} `json:"periods"`
+	Players []struct {
+		Status     string `json:"status"`
+		Order      int    `json:"order"`
+		PersonID   int    `json:"personId"`
+		JerseyNum  string `json:"jerseyNum"`
+		Position   string `json:"position,omitempty"`
+		Starter    string `json:"starter"`
+		Oncourt    string `json:"oncourt"`
+		Played     string `json:"played"`
+		Statistics struct {
+			Assists                 int     `json:"assists"`
+			Blocks                  int     `json:"blocks"`
+			BlocksReceived          int     `json:"blocksReceived"`
+			FieldGoalsAttempted     int     `json:"fieldGoalsAttempted"`
+			FieldGoalsMade          int     `json:"fieldGoalsMade"`
+			FieldGoalsPercentage    float64 `json:"fieldGoalsPercentage"`
+			FoulsOffensive          int     `json:"foulsOffensive"`
+			FoulsDrawn              int     `json:"foulsDrawn"`
+			FoulsPersonal           int     `json:"foulsPersonal"`
+			FoulsTechnical          int     `json:"foulsTechnical"`
+			FreeThrowsAttempted     int     `json:"freeThrowsAttempted"`
+			FreeThrowsMade          int     `json:"freeThrowsMade"`
+			FreeThrowsPercentage    float64 `json:"freeThrowsPercentage"`
+			Minus                   float64 `json:"minus"`
+			Minutes                 string  `json:"minutes"`
+			MinutesCalculated       string  `json:"minutesCalculated"`
+			Plus                    float64 `json:"plus"`
+			PlusMinusPoints         float64 `json:"plusMinusPoints"`
+			Points                  int     `json:"points"`
+			PointsFastBreak         int     `json:"pointsFastBreak"`
+			PointsInThePaint        int     `json:"pointsInThePaint"`
+			PointsSecondChance      int     `json:"pointsSecondChance"`
+			ReboundsDefensive       int     `json:"reboundsDefensive"`
+			ReboundsOffensive       int     `json:"reboundsOffensive"`
+			ReboundsTotal           int     `json:"reboundsTotal"`
+			Steals                  int     `json:"steals"`
+			ThreePointersAttempted  int     `json:"threePointersAttempted"`
+			ThreePointersMade       int     `json:"threePointersMade"`
+			ThreePointersPercentage float64 `json:"threePointersPercentage"`
+			Turnovers               int     `json:"turnovers"`
+			TwoPointersAttempted    int     `json:"twoPointersAttempted"`
+			TwoPointersMade         int     `json:"twoPointersMade"`
+			TwoPointersPercentage   float64 `json:"twoPointersPercentage"`
+		} `json:"statistics"`
+		Name                  string `json:"name"`
+		NameI                 string `json:"nameI"`
+		FirstName             string `json:"firstName"`
+		FamilyName            string `json:"familyName"`
+		NotPlayingReason      string `json:"notPlayingReason,omitempty"`
+		NotPlayingDescription string `json:"notPlayingDescription,omitempty"`
+	} `json:"players"`
+	Statistics struct {
+		Assists                      int     `json:"assists"`
+		AssistsTurnoverRatio         float64 `json:"assistsTurnoverRatio"`
+		BenchPoints                  int     `json:"benchPoints"`
+		BiggestLead                  int     `json:"biggestLead"`
+		BiggestScoringRun            int     `json:"biggestScoringRun"`
+		BiggestScoringRunScore       string  `json:"biggestScoringRunScore"`
+		Blocks                       int     `json:"blocks"`
+		BlocksReceived               int     `json:"blocksReceived"`
+		FastBreakPointsAttempted     int     `json:"fastBreakPointsAttempted"`
+		FastBreakPointsMade          int     `json:"fastBreakPointsMade"`
+		FastBreakPointsPercentage    float64 `json:"fastBreakPointsPercentage"`
+		FieldGoalsAttempted          int     `json:"fieldGoalsAttempted"`
+		FieldGoalsEffectiveAdjusted  float64 `json:"fieldGoalsEffectiveAdjusted"`
+		FieldGoalsMade               int     `json:"fieldGoalsMade"`
+		FieldGoalsPercentage         float64 `json:"fieldGoalsPercentage"`
+		FoulsOffensive               int     `json:"foulsOffensive"`
+		FoulsDrawn                   int     `json:"foulsDrawn"`
+		FoulsPersonal                int     `json:"foulsPersonal"`
+		FoulsTeam                    int     `json:"foulsTeam"`
+		FoulsTechnical               int     `json:"foulsTechnical"`
+		FoulsTeamTechnical           int     `json:"foulsTeamTechnical"`
+		FreeThrowsAttempted          int     `json:"freeThrowsAttempted"`
+		FreeThrowsMade               int     `json:"freeThrowsMade"`
+		FreeThrowsPercentage         float64 `json:"freeThrowsPercentage"`
+		LeadChanges                  int     `json:"leadChanges"`
+		Minutes                      string  `json:"minutes"`
+		MinutesCalculated            string  `json:"minutesCalculated"`
+		Points                       int     `json:"points"`
+		PointsAgainst                int     `json:"pointsAgainst"`
+		PointsFastBreak              int     `json:"pointsFastBreak"`
+		PointsFromTurnovers          int     `json:"pointsFromTurnovers"`
+		PointsInThePaint             int     `json:"pointsInThePaint"`
+		PointsInThePaintAttempted    int     `json:"pointsInThePaintAttempted"`
+		PointsInThePaintMade         int     `json:"pointsInThePaintMade"`
+		PointsInThePaintPercentage   float64 `json:"pointsInThePaintPercentage"`
+		PointsSecondChance           int     `json:"pointsSecondChance"`
+		ReboundsDefensive            int     `json:"reboundsDefensive"`
+		ReboundsOffensive            int     `json:"reboundsOffensive"`
+		ReboundsPersonal             int     `json:"reboundsPersonal"`
+		ReboundsTeam                 int     `json:"reboundsTeam"`
+		ReboundsTeamDefensive        int     `json:"reboundsTeamDefensive"`
+		ReboundsTeamOffensive        int     `json:"reboundsTeamOffensive"`
+		ReboundsTotal                int     `json:"reboundsTotal"`
+		SecondChancePointsAttempted  int     `json:"secondChancePointsAttempted"`
+		SecondChancePointsMade       int     `json:"secondChancePointsMade"`
+		SecondChancePointsPercentage float64 `json:"secondChancePointsPercentage"`
+		Steals                       int     `json:"steals"`
+		ThreePointersAttempted       int     `json:"threePointersAttempted"`
+		ThreePointersMade            int     `json:"threePointersMade"`
+		ThreePointersPercentage      float64 `json:"threePointersPercentage"`
+		TimeLeading                  string  `json:"timeLeading"`
+		TimesTied                    int     `json:"timesTied"`
+		TrueShootingAttempts         float64 `json:"trueShootingAttempts"`
+		TrueShootingPercentage       float64 `json:"trueShootingPercentage"`
+		Turnovers                    int     `json:"turnovers"`
+		TurnoversTeam                int     `json:"turnoversTeam"`
+		TurnoversTotal               int     `json:"turnoversTotal"`
+		TwoPointersAttempted         int     `json:"twoPointersAttempted"`
+		TwoPointersMade              int     `json:"twoPointersMade"`
+		TwoPointersPercentage        float64 `json:"twoPointersPercentage"`
+	} `json:"statistics"`
+}
+
 type BoxScoreQuery struct {
 	Meta struct {
 		Version int    `json:"version"`
@@ -173,261 +302,8 @@ type BoxScoreQuery struct {
 			JerseyNum  string `json:"jerseyNum"`
 			Assignment string `json:"assignment"`
 		} `json:"officials"`
-		HomeTeam struct {
-			TeamID            int    `json:"teamId"`
-			TeamName          string `json:"teamName"`
-			TeamCity          string `json:"teamCity"`
-			TeamTricode       string `json:"teamTricode"`
-			Score             int    `json:"score"`
-			InBonus           string `json:"inBonus"`
-			TimeoutsRemaining int    `json:"timeoutsRemaining"`
-			Periods           []struct {
-				Period     int    `json:"period"`
-				PeriodType string `json:"periodType"`
-				Score      int    `json:"score"`
-			} `json:"periods"`
-			Players []struct {
-				Status     string `json:"status"`
-				Order      int    `json:"order"`
-				PersonID   int    `json:"personId"`
-				JerseyNum  string `json:"jerseyNum"`
-				Position   string `json:"position,omitempty"`
-				Starter    string `json:"starter"`
-				Oncourt    string `json:"oncourt"`
-				Played     string `json:"played"`
-				Statistics struct {
-					Assists                 int     `json:"assists"`
-					Blocks                  int     `json:"blocks"`
-					BlocksReceived          int     `json:"blocksReceived"`
-					FieldGoalsAttempted     int     `json:"fieldGoalsAttempted"`
-					FieldGoalsMade          int     `json:"fieldGoalsMade"`
-					FieldGoalsPercentage    float64 `json:"fieldGoalsPercentage"`
-					FoulsOffensive          int     `json:"foulsOffensive"`
-					FoulsDrawn              int     `json:"foulsDrawn"`
-					FoulsPersonal           int     `json:"foulsPersonal"`
-					FoulsTechnical          int     `json:"foulsTechnical"`
-					FreeThrowsAttempted     int     `json:"freeThrowsAttempted"`
-					FreeThrowsMade          int     `json:"freeThrowsMade"`
-					FreeThrowsPercentage    float64 `json:"freeThrowsPercentage"`
-					Minus                   float64 `json:"minus"`
-					Minutes                 string  `json:"minutes"`
-					MinutesCalculated       string  `json:"minutesCalculated"`
-					Plus                    float64 `json:"plus"`
-					PlusMinusPoints         float64 `json:"plusMinusPoints"`
-					Points                  int     `json:"points"`
-					PointsFastBreak         int     `json:"pointsFastBreak"`
-					PointsInThePaint        int     `json:"pointsInThePaint"`
-					PointsSecondChance      int     `json:"pointsSecondChance"`
-					ReboundsDefensive       int     `json:"reboundsDefensive"`
-					ReboundsOffensive       int     `json:"reboundsOffensive"`
-					ReboundsTotal           int     `json:"reboundsTotal"`
-					Steals                  int     `json:"steals"`
-					ThreePointersAttempted  int     `json:"threePointersAttempted"`
-					ThreePointersMade       int     `json:"threePointersMade"`
-					ThreePointersPercentage float64 `json:"threePointersPercentage"`
-					Turnovers               int     `json:"turnovers"`
-					TwoPointersAttempted    int     `json:"twoPointersAttempted"`
-					TwoPointersMade         int     `json:"twoPointersMade"`
-					TwoPointersPercentage   float64 `json:"twoPointersPercentage"`
-				} `json:"statistics"`
-				Name                  string `json:"name"`
-				NameI                 string `json:"nameI"`
-				FirstName             string `json:"firstName"`
-				FamilyName            string `json:"familyName"`
-				NotPlayingReason      string `json:"notPlayingReason,omitempty"`
-				NotPlayingDescription string `json:"notPlayingDescription,omitempty"`
-			} `json:"players"`
-			Statistics struct {
-				Assists                      int     `json:"assists"`
-				AssistsTurnoverRatio         float64 `json:"assistsTurnoverRatio"`
-				BenchPoints                  int     `json:"benchPoints"`
-				BiggestLead                  int     `json:"biggestLead"`
-				BiggestLeadScore             string  `json:"biggestLeadScore"`
-				BiggestScoringRun            int     `json:"biggestScoringRun"`
-				BiggestScoringRunScore       string  `json:"biggestScoringRunScore"`
-				Blocks                       int     `json:"blocks"`
-				BlocksReceived               int     `json:"blocksReceived"`
-				FastBreakPointsAttempted     int     `json:"fastBreakPointsAttempted"`
-				FastBreakPointsMade          int     `json:"fastBreakPointsMade"`
-				FastBreakPointsPercentage    float64 `json:"fastBreakPointsPercentage"`
-				FieldGoalsAttempted          int     `json:"fieldGoalsAttempted"`
-				FieldGoalsEffectiveAdjusted  float64 `json:"fieldGoalsEffectiveAdjusted"`
-				FieldGoalsMade               int     `json:"fieldGoalsMade"`
-				FieldGoalsPercentage         float64 `json:"fieldGoalsPercentage"`
-				FoulsOffensive               int     `json:"foulsOffensive"`
-				FoulsDrawn                   int     `json:"foulsDrawn"`
-				FoulsPersonal                int     `json:"foulsPersonal"`
-				FoulsTeam                    int     `json:"foulsTeam"`
-				FoulsTechnical               int     `json:"foulsTechnical"`
-				FoulsTeamTechnical           int     `json:"foulsTeamTechnical"`
-				FreeThrowsAttempted          int     `json:"freeThrowsAttempted"`
-				FreeThrowsMade               int     `json:"freeThrowsMade"`
-				FreeThrowsPercentage         float64 `json:"freeThrowsPercentage"`
-				LeadChanges                  int     `json:"leadChanges"`
-				Minutes                      string  `json:"minutes"`
-				MinutesCalculated            string  `json:"minutesCalculated"`
-				Points                       int     `json:"points"`
-				PointsAgainst                int     `json:"pointsAgainst"`
-				PointsFastBreak              int     `json:"pointsFastBreak"`
-				PointsFromTurnovers          int     `json:"pointsFromTurnovers"`
-				PointsInThePaint             int     `json:"pointsInThePaint"`
-				PointsInThePaintAttempted    int     `json:"pointsInThePaintAttempted"`
-				PointsInThePaintMade         int     `json:"pointsInThePaintMade"`
-				PointsInThePaintPercentage   float64 `json:"pointsInThePaintPercentage"`
-				PointsSecondChance           int     `json:"pointsSecondChance"`
-				ReboundsDefensive            int     `json:"reboundsDefensive"`
-				ReboundsOffensive            int     `json:"reboundsOffensive"`
-				ReboundsPersonal             int     `json:"reboundsPersonal"`
-				ReboundsTeam                 int     `json:"reboundsTeam"`
-				ReboundsTeamDefensive        int     `json:"reboundsTeamDefensive"`
-				ReboundsTeamOffensive        int     `json:"reboundsTeamOffensive"`
-				ReboundsTotal                int     `json:"reboundsTotal"`
-				SecondChancePointsAttempted  int     `json:"secondChancePointsAttempted"`
-				SecondChancePointsMade       int     `json:"secondChancePointsMade"`
-				SecondChancePointsPercentage float64 `json:"secondChancePointsPercentage"`
-				Steals                       int     `json:"steals"`
-				ThreePointersAttempted       int     `json:"threePointersAttempted"`
-				ThreePointersMade            int     `json:"threePointersMade"`
-				ThreePointersPercentage      float64 `json:"threePointersPercentage"`
-				TimeLeading                  string  `json:"timeLeading"`
-				TimesTied                    int     `json:"timesTied"`
-				TrueShootingAttempts         float64 `json:"trueShootingAttempts"`
-				TrueShootingPercentage       float64 `json:"trueShootingPercentage"`
-				Turnovers                    int     `json:"turnovers"`
-				TurnoversTeam                int     `json:"turnoversTeam"`
-				TurnoversTotal               int     `json:"turnoversTotal"`
-				TwoPointersAttempted         int     `json:"twoPointersAttempted"`
-				TwoPointersMade              int     `json:"twoPointersMade"`
-				TwoPointersPercentage        float64 `json:"twoPointersPercentage"`
-			} `json:"statistics"`
-		} `json:"homeTeam"`
-		AwayTeam struct {
-			TeamID            int    `json:"teamId"`
-			TeamName          string `json:"teamName"`
-			TeamCity          string `json:"teamCity"`
-			TeamTricode       string `json:"teamTricode"`
-			Score             int    `json:"score"`
-			InBonus           string `json:"inBonus"`
-			TimeoutsRemaining int    `json:"timeoutsRemaining"`
-			Periods           []struct {
-				Period     int    `json:"period"`
-				PeriodType string `json:"periodType"`
-				Score      int    `json:"score"`
-			} `json:"periods"`
-			Players []struct {
-				Status     string `json:"status"`
-				Order      int    `json:"order"`
-				PersonID   int    `json:"personId"`
-				JerseyNum  string `json:"jerseyNum"`
-				Position   string `json:"position,omitempty"`
-				Starter    string `json:"starter"`
-				Oncourt    string `json:"oncourt"`
-				Played     string `json:"played"`
-				Statistics struct {
-					Assists                 int     `json:"assists"`
-					Blocks                  int     `json:"blocks"`
-					BlocksReceived          int     `json:"blocksReceived"`
-					FieldGoalsAttempted     int     `json:"fieldGoalsAttempted"`
-					FieldGoalsMade          int     `json:"fieldGoalsMade"`
-					FieldGoalsPercentage    float64 `json:"fieldGoalsPercentage"`
-					FoulsOffensive          int     `json:"foulsOffensive"`
-					FoulsDrawn              int     `json:"foulsDrawn"`
-					FoulsPersonal           int     `json:"foulsPersonal"`
-					FoulsTechnical          int     `json:"foulsTechnical"`
-					FreeThrowsAttempted     int     `json:"freeThrowsAttempted"`
-					FreeThrowsMade          int     `json:"freeThrowsMade"`
-					FreeThrowsPercentage    float64 `json:"freeThrowsPercentage"`
-					Minus                   float64 `json:"minus"`
-					Minutes                 string  `json:"minutes"`
-					MinutesCalculated       string  `json:"minutesCalculated"`
-					Plus                    float64 `json:"plus"`
-					PlusMinusPoints         float64 `json:"plusMinusPoints"`
-					Points                  int     `json:"points"`
-					PointsFastBreak         int     `json:"pointsFastBreak"`
-					PointsInThePaint        int     `json:"pointsInThePaint"`
-					PointsSecondChance      int     `json:"pointsSecondChance"`
-					ReboundsDefensive       int     `json:"reboundsDefensive"`
-					ReboundsOffensive       int     `json:"reboundsOffensive"`
-					ReboundsTotal           int     `json:"reboundsTotal"`
-					Steals                  int     `json:"steals"`
-					ThreePointersAttempted  int     `json:"threePointersAttempted"`
-					ThreePointersMade       int     `json:"threePointersMade"`
-					ThreePointersPercentage float64 `json:"threePointersPercentage"`
-					Turnovers               int     `json:"turnovers"`
-					TwoPointersAttempted    int     `json:"twoPointersAttempted"`
-					TwoPointersMade         int     `json:"twoPointersMade"`
-					TwoPointersPercentage   float64 `json:"twoPointersPercentage"`
-				} `json:"statistics"`
-				Name                  string `json:"name"`
-				NameI                 string `json:"nameI"`
-				FirstName             string `json:"firstName"`
-				FamilyName            string `json:"familyName"`
-				NotPlayingReason      string `json:"notPlayingReason,omitempty"`
-				NotPlayingDescription string `json:"notPlayingDescription,omitempty"`
-			} `json:"players"`
-			Statistics struct {
-				Assists                      int     `json:"assists"`
-				AssistsTurnoverRatio         float64 `json:"assistsTurnoverRatio"`
-				BenchPoints                  int     `json:"benchPoints"`
-				BiggestLead                  int     `json:"biggestLead"`
-				BiggestScoringRun            int     `json:"biggestScoringRun"`
-				BiggestScoringRunScore       string  `json:"biggestScoringRunScore"`
-				Blocks                       int     `json:"blocks"`
-				BlocksReceived               int     `json:"blocksReceived"`
-				FastBreakPointsAttempted     int     `json:"fastBreakPointsAttempted"`
-				FastBreakPointsMade          int     `json:"fastBreakPointsMade"`
-				FastBreakPointsPercentage    float64 `json:"fastBreakPointsPercentage"`
-				FieldGoalsAttempted          int     `json:"fieldGoalsAttempted"`
-				FieldGoalsEffectiveAdjusted  float64 `json:"fieldGoalsEffectiveAdjusted"`
-				FieldGoalsMade               int     `json:"fieldGoalsMade"`
-				FieldGoalsPercentage         float64 `json:"fieldGoalsPercentage"`
-				FoulsOffensive               int     `json:"foulsOffensive"`
-				FoulsDrawn                   int     `json:"foulsDrawn"`
-				FoulsPersonal                int     `json:"foulsPersonal"`
-				FoulsTeam                    int     `json:"foulsTeam"`
-				FoulsTechnical               int     `json:"foulsTechnical"`
-				FoulsTeamTechnical           int     `json:"foulsTeamTechnical"`
-				FreeThrowsAttempted          int     `json:"freeThrowsAttempted"`
-				FreeThrowsMade               int     `json:"freeThrowsMade"`
-				FreeThrowsPercentage         float64 `json:"freeThrowsPercentage"`
-				LeadChanges                  int     `json:"leadChanges"`
-				Minutes                      string  `json:"minutes"`
-				MinutesCalculated            string  `json:"minutesCalculated"`
-				Points                       int     `json:"points"`
-				PointsAgainst                int     `json:"pointsAgainst"`
-				PointsFastBreak              int     `json:"pointsFastBreak"`
-				PointsFromTurnovers          int     `json:"pointsFromTurnovers"`
-				PointsInThePaint             int     `json:"pointsInThePaint"`
-				PointsInThePaintAttempted    int     `json:"pointsInThePaintAttempted"`
-				PointsInThePaintMade         int     `json:"pointsInThePaintMade"`
-				PointsInThePaintPercentage   float64 `json:"pointsInThePaintPercentage"`
-				PointsSecondChance           int     `json:"pointsSecondChance"`
-				ReboundsDefensive            int     `json:"reboundsDefensive"`
-				ReboundsOffensive            int     `json:"reboundsOffensive"`
-				ReboundsPersonal             int     `json:"reboundsPersonal"`
-				ReboundsTeam                 int     `json:"reboundsTeam"`
-				ReboundsTeamDefensive        int     `json:"reboundsTeamDefensive"`
-				ReboundsTeamOffensive        int     `json:"reboundsTeamOffensive"`
-				ReboundsTotal                int     `json:"reboundsTotal"`
-				SecondChancePointsAttempted  int     `json:"secondChancePointsAttempted"`
-				SecondChancePointsMade       int     `json:"secondChancePointsMade"`
-				SecondChancePointsPercentage float64 `json:"secondChancePointsPercentage"`
-				Steals                       int     `json:"steals"`
-				ThreePointersAttempted       int     `json:"threePointersAttempted"`
-				ThreePointersMade            int     `json:"threePointersMade"`
-				ThreePointersPercentage      float64 `json:"threePointersPercentage"`
-				TimeLeading                  string  `json:"timeLeading"`
-				TimesTied                    int     `json:"timesTied"`
-				TrueShootingAttempts         float64 `json:"trueShootingAttempts"`
-				TrueShootingPercentage       float64 `json:"trueShootingPercentage"`
-				Turnovers                    int     `json:"turnovers"`
-				TurnoversTeam                int     `json:"turnoversTeam"`
-				TurnoversTotal               int     `json:"turnoversTotal"`
-				TwoPointersAttempted         int     `json:"twoPointersAttempted"`
-				TwoPointersMade              int     `json:"twoPointersMade"`
-				TwoPointersPercentage        float64 `json:"twoPointersPercentage"`
-			} `json:"statistics"`
-		} `json:"awayTeam"`
+		HomeTeam BoxScoreTeam `json:"homeTeam"`
+		AwayTeam BoxScoreTeam `json:"awayTeam"`
 	} `json:"game"`
 }
 
@@ -655,6 +531,7 @@ func main() {
 		}
 	}
 
+	// TODO only do this for visible elements
 	go (func() {
 		for true {
 			time.Sleep(5 * time.Second)
@@ -668,24 +545,66 @@ func main() {
 
 	homeView := tview.NewFlex().SetDirection(tview.FlexRow).AddItem(header, 0, 1, true).AddItem(grid, 0, 5, true)
 	renderDetailedView := func(gameContext *GameContext) *tview.Flex {
-		table := tview.NewTable().SetBorders(true)
-		if gameContext.boxScore != nil {
-			table.SetCell(0, 0, tview.NewTableCell("Player"))
-			rval := reflect.ValueOf(gameContext.boxScore.Game.AwayTeam.Players[0].Statistics)
-			for i := 0; i < rval.Type().NumField(); i++ {
-				fname := rval.Type().Field(i).Name
-				table.SetCell(0, i+1, tview.NewTableCell(fname))
-			}
-			for r, player := range gameContext.boxScore.Game.AwayTeam.Players {
-				table.SetCell(r+1, 0, tview.NewTableCell(fmt.Sprintf("%s. %s", player.FirstName[0:1], player.FamilyName)))
-				rval := reflect.ValueOf(player.Statistics)
-				for i := 0; i < rval.Type().NumField(); i++ {
-					f := reflect.Indirect(rval).Field(i)
-					table.SetCell(r+1, i+1, tview.NewTableCell(fmt.Sprintf("%s", f)))
+		renderPlayerBoxScore := func(teamData *BoxScoreTeam) *tview.Table {
+			table := tview.NewTable().SetBorders(true)
+			if gameContext.boxScore != nil {
+				table.SetCell(0, 0, tview.NewTableCell(teamData.TeamTricode))
+				for i, colName := range []string{"MIN", "PTS", "TREB", "AST", "FG", "3PT", "OREB", "DREB", "STL", "BLK", "TO", "PF", "+/-"} {
+					table.SetCell(0, i+1, tview.NewTableCell(colName).SetAlign(tview.AlignRight))
+				}
+				for r, player := range teamData.Players {
+					table.SetCell(r+1, 0, tview.NewTableCell(fmt.Sprintf("%s. %s", player.FirstName[0:1], player.FamilyName)))
+					minutes, err := strconv.Atoi(player.Statistics.MinutesCalculated[2:4])
+					if err == nil {
+						table.SetCell(r+1, 1, tview.NewTableCell(fmt.Sprintf("%d", minutes)))
+					}
+					table.SetCell(r+1, 2, tview.NewTableCell(fmt.Sprintf("%d", player.Statistics.Points)).SetAlign(tview.AlignRight))
+					table.SetCell(r+1, 3, tview.NewTableCell(fmt.Sprintf("%d", player.Statistics.ReboundsTotal)).SetAlign(tview.AlignRight))
+					table.SetCell(r+1, 4, tview.NewTableCell(fmt.Sprintf("%d", player.Statistics.Assists)).SetAlign(tview.AlignRight))
+					table.SetCell(r+1, 5, tview.NewTableCell(fmt.Sprintf("%d-%d", player.Statistics.FieldGoalsMade, player.Statistics.FieldGoalsAttempted)).SetAlign(tview.AlignRight))
+					table.SetCell(r+1, 6, tview.NewTableCell(fmt.Sprintf("%d-%d", player.Statistics.ThreePointersMade, player.Statistics.ThreePointersAttempted)).SetAlign(tview.AlignRight))
+					table.SetCell(r+1, 7, tview.NewTableCell(fmt.Sprintf("%d", player.Statistics.ReboundsOffensive)).SetAlign(tview.AlignRight))
+					table.SetCell(r+1, 8, tview.NewTableCell(fmt.Sprintf("%d", player.Statistics.ReboundsDefensive)).SetAlign(tview.AlignRight))
+					table.SetCell(r+1, 9, tview.NewTableCell(fmt.Sprintf("%d", player.Statistics.Steals)).SetAlign(tview.AlignRight))
+					table.SetCell(r+1, 10, tview.NewTableCell(fmt.Sprintf("%d", player.Statistics.Blocks)).SetAlign(tview.AlignRight))
+					table.SetCell(r+1, 11, tview.NewTableCell(fmt.Sprintf("%d", player.Statistics.Turnovers)).SetAlign(tview.AlignRight))
+					table.SetCell(r+1, 12, tview.NewTableCell(fmt.Sprintf("%d", player.Statistics.FoulsPersonal)).SetAlign(tview.AlignRight))
+					table.SetCell(r+1, 13, tview.NewTableCell(fmt.Sprintf("%0.f", player.Statistics.PlusMinusPoints)).SetAlign(tview.AlignRight))
 				}
 			}
+			return table
 		}
-		return tview.NewFlex().SetDirection(tview.FlexRow).AddItem(tview.NewTextView().SetText(gameContext.gameId), 0, 1, true).AddItem(table, 0, 4, true)
+		renderTeamBoxScores := func() *tview.Table {
+			table := tview.NewTable().SetBorders(true)
+			renderTeamRow := func(row int, teamData *BoxScoreTeam) {
+				table.SetCell(row, 1, tview.NewTableCell(fmt.Sprintf("%d", teamData.Statistics.Points)).SetAlign(tview.AlignRight))
+				table.SetCell(row, 2, tview.NewTableCell(fmt.Sprintf("%d-%d", teamData.Statistics.FieldGoalsMade, teamData.Statistics.FieldGoalsAttempted)).SetAlign(tview.AlignRight))
+				table.SetCell(row, 3, tview.NewTableCell(fmt.Sprintf("%d-%d", teamData.Statistics.ThreePointersMade, teamData.Statistics.ThreePointersAttempted)).SetAlign(tview.AlignRight))
+				table.SetCell(row, 4, tview.NewTableCell(fmt.Sprintf("%d", teamData.Statistics.ReboundsOffensive)).SetAlign(tview.AlignRight))
+				table.SetCell(row, 5, tview.NewTableCell(fmt.Sprintf("%d", teamData.Statistics.ReboundsDefensive)).SetAlign(tview.AlignRight))
+				table.SetCell(row, 6, tview.NewTableCell(fmt.Sprintf("%d", teamData.Statistics.ReboundsTotal)).SetAlign(tview.AlignRight))
+				table.SetCell(row, 7, tview.NewTableCell(fmt.Sprintf("%d", teamData.Statistics.Assists)).SetAlign(tview.AlignRight))
+				table.SetCell(row, 8, tview.NewTableCell(fmt.Sprintf("%d", teamData.Statistics.Turnovers)).SetAlign(tview.AlignRight))
+			}
+			if gameContext.boxScore != nil {
+				table.SetCell(1, 0, tview.NewTableCell(gameContext.awayTricode))
+				table.SetCell(2, 0, tview.NewTableCell(gameContext.homeTricode))
+				for i, colName := range []string{"PTS", "FG", "3PT", "ORB", "DRB", "TRB", "AST", "TO"} {
+					table.SetCell(0, i+1, tview.NewTableCell(colName).SetAlign(tview.AlignRight))
+				}
+				renderTeamRow(1, &gameContext.boxScore.Game.AwayTeam)
+				renderTeamRow(2, &gameContext.boxScore.Game.HomeTeam)
+			}
+			return table
+
+		}
+		teamStatsTable := renderTeamBoxScores()
+		top := teamStatsTable
+		awayPlayerTable := renderPlayerBoxScore(&gameContext.boxScore.Game.AwayTeam)
+		homePlayerTable := renderPlayerBoxScore(&gameContext.boxScore.Game.HomeTeam)
+		playerFlex := tview.NewFlex().AddItem(awayPlayerTable, 0, 1, true).AddItem(homePlayerTable, 0, 1, true)
+		view := tview.NewFlex().SetDirection(tview.FlexRow).AddItem(top, 0, 1, true).AddItem(playerFlex, 0, 4, true)
+		return view
 	}
 
 	focusIndex := 0
@@ -725,4 +644,5 @@ func main() {
 	if err := app.Run(); err != nil {
 		panic(err)
 	}
+	// TODO: track total # of requests and try to minimize (ie don't keep requesting after game ends, etc)
 }
