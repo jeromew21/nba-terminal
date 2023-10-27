@@ -432,18 +432,15 @@ type BoxScoreQuery struct {
 
 func getDayQuery(date string) (result DayQuery, err error) {
 	endpoint := fmt.Sprintf("https://stats.nba.com/stats/internationalbroadcasterschedule?LeagueID=00&Season=%s&RegionID=1&Date=%s&EST=Y", "2023", date)
-	fmt.Println(endpoint)
 	resp, err := http.Get(endpoint)
 	if err != nil {
-		fmt.Println("No response from request")
 	}
 	defer resp.Body.Close()
 	body, err := io.ReadAll(resp.Body) // response body is []byte
 	if err != nil {
-		fmt.Println("Failed to read response body")
 	}
-	if err := json.Unmarshal(body, &result); err != nil { // Parse []byte to the go struct pointer
-		fmt.Println("Cannot unmarshal JSON for day")
+	err = json.Unmarshal(body, &result)
+	if err != nil {
 	}
 	return result, err
 }
@@ -451,38 +448,30 @@ func getDayQuery(date string) (result DayQuery, err error) {
 func getBoxScoreQuery(gameId string) (result BoxScoreQuery, err error) {
 	// Note that box scores are 400 error if the game hasn't started yet.
 	endpoint := fmt.Sprintf("https://cdn.nba.com/static/json/liveData/boxscore/boxscore_%s.json", gameId)
-	fmt.Println(endpoint)
 	resp, err := http.Get(endpoint)
 	if err != nil {
-		fmt.Println("No response from request")
 	}
 	defer resp.Body.Close()
 	body, err := io.ReadAll(resp.Body) // response body is []byte
 	if err != nil {
-		fmt.Println("Failed to read response body")
 	}
-	if err := json.Unmarshal(body, &result); err != nil { // Parse []byte to the go struct pointer
-		fmt.Println("Cannot unmarshal JSON for box score")
-		return result, err
+	err = json.Unmarshal(body, &result)
+	if err != nil {
 	}
 	return result, err
 }
 
 func getPlayByPlayQuery(gameId string) (result PlayByPlayQuery, err error) {
 	endpoint := fmt.Sprintf("https://cdn.nba.com/static/json/liveData/playbyplay/playbyplay_%s.json", gameId)
-	fmt.Println(endpoint)
 	resp, err := http.Get(endpoint)
 	if err != nil {
-		fmt.Println("No response from request")
 	}
 	defer resp.Body.Close()
 	body, err := io.ReadAll(resp.Body) // response body is []byte
 	if err != nil {
-		fmt.Println("Failed to read response body")
 	}
 	err = json.Unmarshal(body, &result)
 	if err != nil { // Parse []byte to the go struct pointer
-		fmt.Println("Cannot unmarshal JSON for play-by-play")
 	}
 	return result, err
 }
@@ -515,6 +504,7 @@ type GameContext struct {
 	homeTricode     string
 	awayTricode     string
 	time            string
+	textView        *tview.TextView
 	boxScore        *BoxScoreQuery
 	plays           *PlayByPlayQuery
 	boxScoreChannel chan *BoxScoreQuery
@@ -525,7 +515,7 @@ type GameContext struct {
 type NBAContext struct {
 	day        DayQuery
 	dayChannel chan DayQuery
-	games      []GameContext
+	games      []*GameContext
 }
 
 const ( // iota is reset to 0
@@ -567,7 +557,7 @@ func (g GameContext) RenderCard() GameCardRenderData {
 		for _, player := range g.boxScore.Game.HomeTeam.Players {
 			if player.Statistics.Points > maxPoints {
 				maxPoints = player.Statistics.Points
-				homeLeadingScorerText = fmt.Sprintf("%s. %s %d PTS", player.FirstName[0:1], player.FamilyName, player.Statistics.Points)
+				homeLeadingScorerText = fmt.Sprintf("%s. %s %d PTS %d REB %d AST", player.FirstName[0:1], player.FamilyName, player.Statistics.Points, player.Statistics.ReboundsTotal, player.Statistics.Assists)
 			}
 		}
 		awayLeadingScorerText := ""
@@ -575,25 +565,25 @@ func (g GameContext) RenderCard() GameCardRenderData {
 		for _, player := range g.boxScore.Game.AwayTeam.Players {
 			if player.Statistics.Points > maxPoints {
 				maxPoints = player.Statistics.Points
-				awayLeadingScorerText = fmt.Sprintf("%s. %s %d PTS", player.FirstName[0:1], player.FamilyName, player.Statistics.Points)
+				awayLeadingScorerText = fmt.Sprintf("%s. %s %d PTS %d REB %d AST", player.FirstName[0:1], player.FamilyName, player.Statistics.Points, player.Statistics.ReboundsTotal, player.Statistics.Assists)
 			}
 		}
 		result.copyText0 = awayLeadingScorerText
 		result.copyText1 = homeLeadingScorerText
 	}
-	fmt.Println(result)
 	return result
 }
 
 // TODO render focused view data with box score, detailed stats etc
 
 func main() {
-	currentDate := "10/27/2023"
+	currentDate := "10/27/2023" //time.Now().Format("01/02/2006")
+	fmt.Printf("Current date: %s\n", currentDate)
 	var nbaContext NBAContext
 	nbaContext.dayChannel = make(chan DayQuery)
 	go loadDayQuery(currentDate, nbaContext.dayChannel)
 	nbaContext.day = <-nbaContext.dayChannel
-	nbaContext.games = []GameContext{}
+	nbaContext.games = []*GameContext{}
 	for _, gameMd := range nbaContext.day.ResultSets[1].CompleteGameList {
 		gameId := gameMd.GameID
 		var gameContext GameContext
@@ -605,50 +595,78 @@ func main() {
 		gameContext.playsChannel = make(chan *PlayByPlayQuery)
 		go loadBoxScoreData(gameId, gameContext.boxScoreChannel)
 		go loadPlayByPlayQuery(gameId, gameContext.playsChannel)
-		nbaContext.games = append(nbaContext.games, gameContext)
+		nbaContext.games = append(nbaContext.games, &gameContext)
 	}
 	for _, gameContext := range nbaContext.games {
 		gameContext.boxScore = <-gameContext.boxScoreChannel
 		gameContext.plays = <-gameContext.playsChannel
 	}
 
-	renderCellTextView := func(card GameCardRenderData) *tview.TextView {
+	renderCellText := func(card GameCardRenderData) string {
 		statusColor := "red"
 		if card.status == ongoing {
 			statusColor = "green"
 		}
-
 		gameTime := ""
 		if card.status == upcoming {
 			gameTime = fmt.Sprintf("%s\n", card.time)
 		}
-
-		t := fmt.Sprintf("[white::b]%s\n%s[%s::b]%s[white::-]\n%s\n%s", card.scoreText, gameTime, statusColor, card.statusText, card.copyText0, card.copyText1)
-		tv := tview.NewTextView().
-			SetDynamicColors(true).
-			SetTextAlign(tview.AlignCenter).
-			SetText(t)
-		return tv
+		return fmt.Sprintf("[white::b]%s\n%s[%s::b]%s[white::-]\n%s\n%s", card.scoreText, gameTime, statusColor, card.statusText, card.copyText0, card.copyText1)
 	}
 
 	renderCell := func(card GameCardRenderData, child *tview.TextView) *tview.Frame {
 		frame := tview.NewFrame(child).
 			SetBorders(1, 1, 1, 1, 1, 1)
-		frame.Box.SetBorder(true).SetTitle(card.header)
+		frame.SetBorder(true).SetTitle(card.header)
 		return frame
 	}
 
+	app := tview.NewApplication()
 	grid := tview.NewGrid()
 
 	for index, gameContext := range nbaContext.games {
 		r := index / 5
 		c := index % 5
 		card := gameContext.RenderCard()
-		textView := renderCellTextView(card) // TODO keep track of these outside in order to update
+		textView := tview.NewTextView().
+			SetDynamicColors(true).
+			SetTextAlign(tview.AlignCenter).
+			SetText(renderCellText(card))
+		textView.SetChangedFunc(func() {
+			app.Draw()
+		})
+		gameContext.textView = textView
 		grid.AddItem(renderCell(card, textView), r, c, 1, 1, 0, 0, false)
 	}
 
-	if err := tview.NewApplication().SetRoot(grid, true).SetFocus(grid).Run(); err != nil {
+	updateElements := func() {
+		for _, gameContext := range nbaContext.games {
+			gameId := gameContext.gameId
+			go loadBoxScoreData(gameId, gameContext.boxScoreChannel)
+			go loadPlayByPlayQuery(gameId, gameContext.playsChannel)
+		}
+		for _, gameContext := range nbaContext.games {
+			gameContext.boxScore = <-gameContext.boxScoreChannel
+			gameContext.plays = <-gameContext.playsChannel
+		}
+		for _, gameContext := range nbaContext.games {
+			gameContext.textView.SetText(renderCellText(gameContext.RenderCard()))
+		}
+	}
+
+	go (func() {
+		for true {
+			time.Sleep(5 * time.Second)
+			updateElements()
+		}
+	})()
+
+	header := tview.NewFrame(tview.NewTextView().SetTextAlign(tview.AlignCenter).SetText("Welcome to NBA TUI!")).SetBorders(1, 1, 1, 1, 1, 1)
+	header.SetBorder(true).SetTitle("NBA TUI")
+
+	flex := tview.NewFlex().SetDirection(tview.FlexRow).AddItem(header, 0, 1, true).AddItem(grid, 0, 5, true)
+
+	if err := app.SetRoot(flex, true).SetFocus(grid).Run(); err != nil {
 		panic(err)
 	}
 }
