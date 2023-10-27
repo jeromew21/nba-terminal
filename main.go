@@ -7,9 +7,10 @@ import (
 	//"log"
 	"strings"
 	//"net"
-	//"github.com/gdamore/tcell/v2"
+	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 	"net/http"
+	"reflect"
 	"time"
 )
 
@@ -577,7 +578,7 @@ func (g GameContext) RenderCard() GameCardRenderData {
 // TODO render focused view data with box score, detailed stats etc
 
 func main() {
-	currentDate := "10/27/2023" //time.Now().Format("01/02/2006")
+	currentDate := "10/26/2023" //time.Now().Format("01/02/2006")
 	fmt.Printf("Current date: %s\n", currentDate)
 	var nbaContext NBAContext
 	nbaContext.dayChannel = make(chan DayQuery)
@@ -661,12 +662,67 @@ func main() {
 		}
 	})()
 
-	header := tview.NewFrame(tview.NewTextView().SetTextAlign(tview.AlignCenter).SetText("Welcome to NBA TUI!")).SetBorders(1, 1, 1, 1, 1, 1)
+	headerText := fmt.Sprintf("Welcome to NBA TUI!\n%s", currentDate)
+	header := tview.NewFrame(tview.NewTextView().SetTextAlign(tview.AlignCenter).SetText(headerText)).SetBorders(1, 1, 1, 1, 1, 1)
 	header.SetBorder(true).SetTitle("NBA TUI")
 
-	flex := tview.NewFlex().SetDirection(tview.FlexRow).AddItem(header, 0, 1, true).AddItem(grid, 0, 5, true)
+	homeView := tview.NewFlex().SetDirection(tview.FlexRow).AddItem(header, 0, 1, true).AddItem(grid, 0, 5, true)
+	renderDetailedView := func(gameContext *GameContext) *tview.Flex {
+		table := tview.NewTable().SetBorders(true)
+		if gameContext.boxScore != nil {
+			table.SetCell(0, 0, tview.NewTableCell("Player"))
+			rval := reflect.ValueOf(gameContext.boxScore.Game.AwayTeam.Players[0].Statistics)
+			for i := 0; i < rval.Type().NumField(); i++ {
+				fname := rval.Type().Field(i).Name
+				table.SetCell(0, i+1, tview.NewTableCell(fname))
+			}
+			for r, player := range gameContext.boxScore.Game.AwayTeam.Players {
+				table.SetCell(r+1, 0, tview.NewTableCell(fmt.Sprintf("%s. %s", player.FirstName[0:1], player.FamilyName)))
+				rval := reflect.ValueOf(player.Statistics)
+				for i := 0; i < rval.Type().NumField(); i++ {
+					f := reflect.Indirect(rval).Field(i)
+					table.SetCell(r+1, i+1, tview.NewTableCell(fmt.Sprintf("%s", f)))
+				}
+			}
+		}
+		return tview.NewFlex().SetDirection(tview.FlexRow).AddItem(tview.NewTextView().SetText(gameContext.gameId), 0, 1, true).AddItem(table, 0, 4, true)
+	}
 
-	if err := app.SetRoot(flex, true).SetFocus(grid).Run(); err != nil {
+	focusIndex := 0
+	currentView := 0
+
+	app.SetRoot(homeView, true)
+	app.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
+		// TODO capture arrow keys/vim keys as well
+		if event.Name() == "Tab" {
+			if currentView == 0 {
+				focusIndex += 1
+				if focusIndex >= len(nbaContext.games) {
+					focusIndex = 0
+				}
+				app.SetFocus(nbaContext.games[focusIndex].textView)
+			}
+		} else if event.Name() == "Enter" {
+			if currentView == 0 {
+				app.SetRoot(renderDetailedView(nbaContext.games[focusIndex]), true)
+				currentView = 1
+			}
+		} else if event.Name() == "Esc" {
+			if currentView == 1 {
+				app.SetRoot(homeView, true)
+				app.SetFocus(nbaContext.games[focusIndex].textView)
+				currentView = 0
+			}
+		}
+		//fmt.Println(event.Name())
+		return event
+	})
+
+	if len(nbaContext.games) > 0 {
+		app.SetFocus(nbaContext.games[focusIndex].textView)
+	}
+
+	if err := app.Run(); err != nil {
 		panic(err)
 	}
 }
