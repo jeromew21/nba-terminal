@@ -588,7 +588,7 @@ func (g GameContext) RenderCard() GameCardRenderData {
 // TODO render focused view data with box score, detailed stats etc
 
 func main() {
-	currentDate := "10/26/2023"
+	currentDate := "10/27/2023"
 	var nbaContext NBAContext
 	nbaContext.dayChannel = make(chan DayQuery)
 	go loadDayQuery(currentDate, nbaContext.dayChannel)
@@ -605,9 +605,11 @@ func main() {
 		gameContext.playsChannel = make(chan *PlayByPlayQuery)
 		go loadBoxScoreData(gameId, gameContext.boxScoreChannel)
 		go loadPlayByPlayQuery(gameId, gameContext.playsChannel)
+		nbaContext.games = append(nbaContext.games, gameContext)
+	}
+	for _, gameContext := range nbaContext.games {
 		gameContext.boxScore = <-gameContext.boxScoreChannel
 		gameContext.plays = <-gameContext.playsChannel
-		nbaContext.games = append(nbaContext.games, gameContext)
 	}
 
 	renderCellTextView := func(card GameCardRenderData) *tview.TextView {
