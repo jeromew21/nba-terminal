@@ -618,9 +618,6 @@ func main() {
 			AddText(fmt.Sprintf("%s, %s", gameContext.boxScore.Game.Arena.ArenaName, gameContext.boxScore.Game.Arena.ArenaCity), true, tview.AlignCenter, tcell.ColorWhite).
 			AddText(fmt.Sprintf("%s", gameContext.boxScore.Game.GameTimeUTC), true, tview.AlignCenter, tcell.ColorWhite).
 			AddText(gameContext.boxScore.Game.GameStatusText, true, tview.AlignCenter, tcell.ColorWhite)
-		awayPlayerTable := renderPlayerBoxScore(&gameContext.boxScore.Game.AwayTeam)
-		homePlayerTable := renderPlayerBoxScore(&gameContext.boxScore.Game.HomeTeam)
-		playByPlay := renderPlayByPlay()
 		/*
 			const (
 				home = iota
@@ -629,6 +626,7 @@ func main() {
 			)
 			whichView := home
 		*/
+		awayPlayerTable := renderPlayerBoxScore(&gameContext.boxScore.Game.AwayTeam)
 		frame := tview.NewFrame(awayPlayerTable)
 		app.SetFocus(awayPlayerTable)
 		menuText := tview.NewTextView().SetText("[1] Away [2] Home [3] Play-By-Play")
@@ -639,12 +637,15 @@ func main() {
 			AddItem(frame, 0, 10, true)
 		view.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 			if event.Rune() == '1' {
+				awayPlayerTable := renderPlayerBoxScore(&gameContext.boxScore.Game.AwayTeam)
 				frame.SetPrimitive(awayPlayerTable) // TODO: rerender then async fetch
 				app.SetFocus(awayPlayerTable)
 			} else if event.Rune() == '2' {
+				homePlayerTable := renderPlayerBoxScore(&gameContext.boxScore.Game.HomeTeam)
 				frame.SetPrimitive(homePlayerTable) // TODO: rerender then fetch
 				app.SetFocus(homePlayerTable)
 			} else if event.Rune() == '3' {
+				playByPlay := renderPlayByPlay()
 				frame.SetPrimitive(playByPlay)
 				app.SetFocus(playByPlay)
 			}
@@ -678,7 +679,7 @@ func main() {
 			}
 		} else if event.Name() == "Enter" {
 			if currentView == homepage {
-				if nbaContext.games[focusIndex].boxScore != nil {
+				if nbaContext.games[focusIndex].boxScore != nil && nbaContext.games[focusIndex].plays != nil {
 					view := renderDetailedView(nbaContext.games[focusIndex])
 					app.SetRoot(view, true)
 					app.SetFocus(view)
